@@ -1,12 +1,19 @@
-import {tool} from 'ai';
-import {z} from 'zod';
+import {jsonSchema} from 'ai';
 
-export const weatherTool = tool({
+export const weatherTool = {
   description: '查询指定城市的天气信息',
-  parameters: z.object({
-    city: z.string().describe('城市名称，如“北京”、“上海”'),
+  inputSchema: jsonSchema({
+    type: 'object' as const,
+    properties: {
+      city: {
+        type: 'string' as const,
+        description: '城市名称，如“北京”、“上海”',
+      },
+    },
+    required: ['city'],
+    additionalProperties: false,
   }),
-  execute: async ({city}) => {
+  execute: async ({city}: {city: string}) => {
     const mockWeather: Record<string, string> = {
       北京: '晴，15-25°C，东南风 2 级',
       上海: '多云，18-22°C，西南风 3 级',
@@ -17,14 +24,22 @@ export const weatherTool = tool({
     };
     return mockWeather[city] || `${city}：暂无数据`;
   },
-});
+};
 
-export const calculatorTool = tool({
+export const calculatorTool = {
   description: '计算数学表达式的结果。当用户提问涉及数学运算时使用',
-  parameters: z.object({
-    expression: z.string().describe('数学表达式，如 "2 + 3 * 4"'),
+  inputSchema: jsonSchema({
+    type: 'object' as const,
+    properties: {
+      expression: {
+        type: 'string' as const,
+        description: '数学表达式，如 "2 + 3 * 4"',
+      },
+    },
+    required: ['expression'],
+    additionalProperties: false,
   }),
-  execute: async ({expression}) => {
+  execute: async ({expression}: {expression: string}) => {
     try {
       const result = new Function(`return ${expression}`)();
       return `${expression} = ${result}`;
@@ -32,4 +47,4 @@ export const calculatorTool = tool({
       return `无法计算: ${expression}`;
     }
   },
-});
+};

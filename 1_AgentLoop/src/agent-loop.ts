@@ -1,6 +1,7 @@
 import {streamText, type ModelMessage} from 'ai';
+import {detect, recordCall, recordResult, resetHistory} from './loop_detection';
 
-const MAX_STEPS = 10;
+const MAX_STEPS = 15;
 
 export async function agentLoop(
   model: any,
@@ -9,21 +10,25 @@ export async function agentLoop(
   system: string,
 ) {
   let step = 0;
+  resetHistory();
 
   while (step < MAX_STEPS) {
     step++;
     console.log(`\n--- Step ${step} ---`);
 
-    const result = streamText({
+    const result = await streamText({
       model,
       system,
       tools,
       messages,
-      // 不设置 stopWhen, 每次只跑一步
+      maxRetries: 0,
+      onError: () => {},
     });
 
     let hasToolCall = false;
     let fullText = '';
+    let shouldBreak = false;
+    let lastToolCall: {name: string; input: unknown} | null = null;
 
     for await (const part of result.fullStream) {
       switch (part.type) {
@@ -32,30 +37,53 @@ export async function agentLoop(
           fullText += part.text;
           break;
 
-        case 'tool-call':
+        case 'tool-call': {
           hasToolCall = true;
+          lastToolCall = {name: part.toolName, input: part.input};
           console.log(
             `  [调用: ${part.toolName}(${JSON.stringify(part.input)})]`,
           );
+
+          // 循环检测
+          const detection = detect(part.toolName, part.input);
+          if (detection.stuck) {
+            console.log(`  ${detection.message}`);
+            if (detection.level === 'critical') {
+              shouldBreak = true;
+            } else {
+              messages.push({
+                role: 'user' as const,
+                content: `[系统提醒] ${detection.message}。请换一个思路解决问题，不要重复同样的操作。`,
+              });
+            }
+          }
+          recordCall(part.toolName, part.input);
           break;
+        }
 
         case 'tool-result':
           console.log(`  [结果: ${JSON.stringify(part.output)}]`);
+          if (lastToolCall) {
+            recordResult(lastToolCall.name, lastToolCall.input, part.output);
+          }
           break;
       }
     }
 
-    // 拿到这一步结果，追加到消息历史
-    const stepMessage = await result.response;
-    messages.push(...stepMessage.messages);
-
-    // 退出条件: 模型没有任何调用任何工具，说明它认为可以直接回复了
-    if (!hasToolCall) {
+    if (shouldBreak) {
+      console.log('\n[循环检测触发，Agent 已停止]');
       break;
     }
 
-    // 还有工具调用 -> 继续循环，让模型看到工具结果后继续思考
-    console.log(' -> 模型还在工作，继续下一步');
+    const stepResult = await result.response;
+    messages.push(...stepResult.messages);
+
+    if (!hasToolCall) {
+      if (fullText) console.log();
+      break;
+    }
+
+    console.log('  \u2192 继续下一步...');
   }
 
   if (step >= MAX_STEPS) {
