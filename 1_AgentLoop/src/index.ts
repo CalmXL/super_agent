@@ -11,7 +11,9 @@ const qwen = createOpenAI({
   apiKey: process.env.DASHSCOPE_API_KEY,
 });
 
-const model = process.env.DASHSCOPE_API_KEY
+console.log(process.env.DASHSCOPE_API_KEY)
+
+const model = process.env.TEST_KEY
   ? qwen.chat('qwen-plus-latest')
   : createMockModel();
 
