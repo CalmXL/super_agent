@@ -6,15 +6,15 @@ import {createInterface} from 'node:readline';
 import {weatherTool, calculatorTool} from './tools';
 import {agentLoop} from './agent-loop';
 
-const qwen = createOpenAI({
-  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+const cc = createOpenAI({
+  baseURL: 'https://147ai.online/v1',
   apiKey: process.env.DASHSCOPE_API_KEY,
 });
 
-console.log(process.env.DASHSCOPE_API_KEY)
+console.log(process.env.DASHSCOPE_API_KEY);
 
 const model = process.env.TEST_KEY
-  ? qwen.chat('qwen-plus-latest')
+  ? cc.chat('claude-sonnet-4-6')
   : createMockModel();
 
 const tools = {get_weather: weatherTool, calculator: calculatorTool};
