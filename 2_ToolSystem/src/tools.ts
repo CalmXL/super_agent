@@ -4,6 +4,8 @@ import type {ToolDefinition} from './tool-registry.js';
 import {editFileTool} from './tools/file-tools.js';
 import {globTool, grepTool} from './tools/search-tools.js';
 import {bashTool} from './tools/bash-tool.js';
+import {fetchUrlTool} from './tools/fetch-tool.js';
+import {startPreviewTool} from './tools/preview-tool.js';
 
 export const weatherTool: ToolDefinition = {
   name: 'get_weather',
@@ -134,4 +136,6 @@ export const allTools: ToolDefinition[] = [
   globTool,
   grepTool,
   bashTool,
+  fetchUrlTool,
+  startPreviewTool,
 ];

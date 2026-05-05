@@ -1,8 +1,7 @@
+import fg from 'fast-glob';
+import {readdirSync, readFileSync, statSync} from 'node:fs';
 import {join, relative, resolve} from 'node:path';
 import {ToolDefinition} from '../tool-registry';
-import fg from 'fast-glob';
-import {Tool} from 'ai';
-import {readdirSync, readFileSync, statSync} from 'node:fs';
 
 // 按模式找文件
 export const globTool: ToolDefinition = {

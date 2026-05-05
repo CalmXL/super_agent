@@ -5,14 +5,14 @@ import {ToolRegistry} from './tool-registry';
 
 const MAX_STEPS = 15;
 const MAX_RETRIES = 3;
-const TOKEN_BUDGET = 15000;
+const TOKEN_BUDGET = 50000;
 
 /**
- * 
- * @param model 
- * @param registry 
- * @param messages 
- * @param system 
+ *
+ * @param model
+ * @param registry
+ * @param messages
+ * @param system
  */
 export async function agentLoop(
   model: any,
@@ -26,7 +26,7 @@ export async function agentLoop(
 
   while (step < MAX_STEPS) {
     step++;
-    console.log(`\n--- Step ${step} ---`);  
+    console.log(`\n--- Step ${step} ---`);
 
     let hasToolCall = false;
     let fullText = '';
