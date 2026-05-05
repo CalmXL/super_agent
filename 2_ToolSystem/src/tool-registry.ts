@@ -13,7 +13,15 @@ export interface ToolDefinition {
 const DEFAULT_MAX_RESULT_CHARS = 3000;
 
 export class ToolRegistry {
+  // Map 存储所有工具
   private tools = new Map<string, ToolDefinition>();
+
+  // 独占锁标志
+  private exclusiveLock = false;
+  // 当前并发执行数
+  private concurrentCount = 0;
+  // 等待队列，存储 resolve 函数
+  private waitQueue: Array<() => void> = [];
 
   register(...tools: ToolDefinition[]): void {
     for (const tool of tools) {
@@ -29,19 +37,66 @@ export class ToolRegistry {
     return Array.from(this.tools.values());
   }
 
+  private async acquireConcurrent(): Promise<void> {
+    while (this.exclusiveLock) {
+      await new Promise<void>((r) => this.waitQueue.push(r));
+    }
+    this.concurrentCount++;
+  }
+
+  private releaseConcurrent(): void {
+    this.concurrentCount--;
+    if (this.concurrentCount === 0) this.drainQueue();
+  }
+
+  private async acquireExclusive(): Promise<void> {
+    while (this.exclusiveLock || this.concurrentCount > 0) {
+      await new Promise<void>((r) => this.waitQueue.push(r));
+    }
+    this.exclusiveLock = true;
+  }
+
+  private releaseExclusive(): void {
+    this.exclusiveLock = false;
+    this.drainQueue();
+  }
+
+  private drainQueue(): void {
+    const waiting = this.waitQueue.splice(0);
+    for (const resolve of waiting) resolve();
+  }
+
   toAISDKFormat(): Record<string, any> {
     const result: Record<string, any> = {};
     for (const [name, tool] of this.tools) {
       const maxChars = tool.maxResultChars;
       const executeFn = tool.execute;
+      const isSafe = tool.isConcurrencySafe === true;
+      const registry = this;
+
       result[name] = {
         description: tool.description,
         inputSchema: jsonSchema(tool.parameters as any),
         execute: async (input: any) => {
-          const raw = await executeFn(input);
-          const text =
-            typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
-          return truncateResult(text, maxChars);
+          if (isSafe) {
+            await registry.acquireConcurrent();
+            console.log(`  [并发] ${name} 获取共享锁`);
+          } else {
+            await registry.acquireExclusive();
+            console.log(`  [串行] ${name} 获取独占锁，等待其他工具完成`);
+          }
+          try {
+            const raw = await executeFn(input);
+            const text =
+              typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
+            return truncateResult(text, maxChars);
+          } finally {
+            if (isSafe) {
+              registry.releaseConcurrent();
+            } else {
+              registry.releaseExclusive();
+            }
+          }
         },
       };
     }
@@ -49,14 +104,20 @@ export class ToolRegistry {
   }
 }
 
+/**
+ * 结果截断
+ * @param text 结果字符
+ * @param maxChars 最大字符数
+ * @returns
+ */
 export function truncateResult(
   text: string,
   maxChars: number = DEFAULT_MAX_RESULT_CHARS,
 ): string {
   if (text.length <= maxChars) return text;
 
-  const headSize = Math.floor(maxChars * 0.6);
-  const tailSize = maxChars - headSize;
+  const headSize = Math.floor(maxChars * 0.6); // 60% 头部大小
+  const tailSize = maxChars - headSize; // 尾部大小
   const head = text.slice(0, headSize);
   const tail = text.slice(-tailSize);
   const dropped = text.length - headSize - tailSize;

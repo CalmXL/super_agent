@@ -18,6 +18,8 @@ const model = process.env.TEST_KEY
   ? cc.chat('claude-sonnet-4-6')
   : createMockModel();
 
+// const model = cc.chat('claude-sonnet-4-6');
+
 const registry = new ToolRegistry();
 registry.register(...allTools);
 

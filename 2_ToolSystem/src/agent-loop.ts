@@ -7,6 +7,13 @@ const MAX_STEPS = 15;
 const MAX_RETRIES = 3;
 const TOKEN_BUDGET = 15000;
 
+/**
+ * 
+ * @param model 
+ * @param registry 
+ * @param messages 
+ * @param system 
+ */
 export async function agentLoop(
   model: any,
   registry: ToolRegistry,

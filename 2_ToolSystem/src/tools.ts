@@ -1,6 +1,9 @@
 import {readFileSync, writeFileSync, readdirSync, statSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 import type {ToolDefinition} from './tool-registry.js';
+import {editFileTool} from './tools/file-tools.js';
+import {globTool, grepTool} from './tools/search-tools.js';
+import {bashTool} from './tools/bash-tool.js';
 
 export const weatherTool: ToolDefinition = {
   name: 'get_weather',
@@ -127,4 +130,8 @@ export const allTools: ToolDefinition[] = [
   readFileTool,
   writeFileTool,
   listDirectoryTool,
+  editFileTool,
+  globTool,
+  grepTool,
+  bashTool,
 ];

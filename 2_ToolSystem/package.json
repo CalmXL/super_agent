@@ -13,14 +13,15 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.1",
   "dependencies": {
-    "ai": "5.0.98",
     "@ai-sdk/openai": "2.0.44",
+    "ai": "5.0.98",
     "dotenv": "^17.0.0",
+    "fast-glob": "3.3.3",
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.0.0"
   }
 }
