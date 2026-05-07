@@ -63,15 +63,13 @@ export async function agentLoop(
           messages,
           maxRetries: 0,
           onError: (err) => {
-            console.log('错误原因：', err);
-          },
-          onFinish({finishReason, usage}) {
-            console.log('生成结束原因:', finishReason);
+            // console.log('错误原因：', err);
           },
         });
 
         // 消费流，处理各类型输出
         for await (const part of result.fullStream) {
+          console.log('🚀 ~ agentLoop ~ part:', part);
           switch (part.type) {
             // 文本增量：直接输出并累积
             case 'text-delta':
@@ -147,6 +145,8 @@ export async function agentLoop(
     }
 
     // 将本步产生的消息追加到历史
+    // console.log('  [本步消息]');
+    // console.log(...stepResponse!.messages.map((msg) => msg.content));
     messages.push(...stepResponse!.messages);
 
     // Token 预算追踪：计算输入+输出Token
@@ -169,7 +169,7 @@ export async function agentLoop(
 
     // 无工具调用：说明模型已完成任务
     if (!hasToolCall) {
-      if (fullText) console.log();
+      if (fullText) console.log(fullText);
       break;
     }
 
