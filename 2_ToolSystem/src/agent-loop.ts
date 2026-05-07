@@ -69,7 +69,7 @@ export async function agentLoop(
 
         // 消费流，处理各类型输出
         for await (const part of result.fullStream) {
-          console.log('🚀 ~ agentLoop ~ part:', part);
+          // console.log('🚀 ~ agentLoop ~ part:', part);
           switch (part.type) {
             // 文本增量：直接输出并累积
             case 'text-delta':

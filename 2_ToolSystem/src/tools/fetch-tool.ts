@@ -38,7 +38,7 @@ export const fetchUrlTool: ToolDefinition = {
   maxResultChars: 1500,
   execute: async ({url}) => {
     for (const key of Object.keys(MOCK_PAGES)) {
-      if (url.startWith(key)) return MOCK_PAGES[key];
+      if (url.startsWith(key)) return MOCK_PAGES[key];
     }
 
     try {
