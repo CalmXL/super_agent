@@ -9,13 +9,16 @@ export const globTool: ToolDefinition = {
   description:
     '按模式搜索文件，支持 * 和 ** 通配符，如 "src/**/*.ts" 匹配 src 下所有的 TypeScript 文件',
   parameters: {
-    pattern: {
-      type: 'string',
-      description: '搜索模式，如"**/*.ts"、"src/*.json"',
-    },
-    path: {
-      type: 'string',
-      description: '搜索起始目录，默认当前目录',
+    type: 'object',
+    properties: {
+      pattern: {
+        type: 'string',
+        description: '搜索模式，如"**/*.ts"、"src/*.json"',
+      },
+      path: {
+        type: 'string',
+        description: '搜索起始目录，默认当前目录',
+      },
     },
     required: ['pattern'],
     additionalProperties: false,

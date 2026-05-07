@@ -9,10 +9,10 @@ import {agentLoop} from './agent-loop';
 
 const cc = createOpenAI({
   baseURL: 'https://147ai.online/v1',
-  apiKey: process.env.DASHSCOPE_API_KEY,
+  apiKey: process.env.AI_KEY,
 });
 
-console.log(process.env.DASHSCOPE_API_KEY);
+console.log(process.env.AI_KEY);
 
 // const model = process.env.TEST_KEY
 //   ? cc.chat('claude-sonnet-4-6')
@@ -34,6 +34,13 @@ for (const tool of registry.getAll()) {
 }
 
 const messages: ModelMessage[] = [];
+/**
+ * createInterface Node.js 内置模块 readline 提供的一个函数，用于创建一个能够逐行读取数据的接口实例。
+ *
+ * process.stdin: 标准输入流。
+ * process.stdout: 标准输出流。
+ *
+ */
 const rl = createInterface({input: process.stdin, output: process.stdout});
 
 const SYSTEM = `你是 Super Agent，一个能读代码、抓网页、生成项目的 AI 助手。
