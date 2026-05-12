@@ -1,95 +1,105 @@
 import 'dotenv/config';
 import {type ModelMessage} from 'ai';
 import {createOpenAI} from '@ai-sdk/openai';
-import {createMockModel} from './mock-model';
+import {createMockModel} from './mock-model.js';
 import {createInterface} from 'node:readline';
-import {ToolRegistry} from './tool-registry';
-import {allTools} from './tools';
-import {agentLoop} from './agent-loop';
+import {ToolRegistry} from './tool-registry.js';
+import {allTools} from './tools.js';
+import {MCPClient, MockMCPClient} from './mcp-client.js';
+import {agentLoop} from './agent-loop.js';
 
-const cc = createOpenAI({
-  baseURL: 'https://147ai.online/v1',
-  apiKey: process.env.AI_KEY,
+const qwen = createOpenAI({
+  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  apiKey: process.env.DASHSCOPE_API_KEY,
 });
 
-console.log(process.env.AI_KEY);
-
-// const model = process.env.TEST_KEY
-//   ? cc.chat('claude-sonnet-4-6')
-//   : createMockModel();
-
-const model = cc.chat('claude-sonnet-4-6');
+const model = process.env.DASHSCOPE_API_KEY
+  ? qwen.chat('qwen-plus-latest')
+  : createMockModel();
 
 const registry = new ToolRegistry();
 registry.register(...allTools);
 
-console.log(`已注册 ${registry.getAll().length} 个工具: `);
+async function connectMCP() {
+  const githubToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
 
-for (const tool of registry.getAll()) {
-  const flags = [
-    tool.isConcurrencySafe ? '可并发' : '串行',
-    tool.isReadOnly ? '只读' : '读写',
-  ].join(', ');
-  console.log(` - ${tool.name} (${flags})`);
-}
+  let canSpawn = true;
+  try {
+    const {execSync} = await import('node:child_process');
+    execSync('echo test', {stdio: 'ignore'});
+  } catch {
+    canSpawn = false;
+  }
 
-const messages: ModelMessage[] = [];
-/**
- * createInterface Node.js 内置模块 readline 提供的一个函数，用于创建一个能够逐行读取数据的接口实例。
- *
- * process.stdin: 标准输入流。
- * process.stdout: 标准输出流。
- *
- */
-const rl = createInterface({input: process.stdin, output: process.stdout});
-
-const SYSTEM = `你是 Super Agent，一个能读代码、抓网页、生成项目的 AI 助手。
-你有这些工具可用：read_file, write_file, list_directory, edit_file, glob, grep, bash, fetch_url, start_preview, get_weather, calculator。
-
-针对常见任务的执行策略：
-
-1. 用户让你"分析项目"或"找代码"时：
-  先 list_directory 看结构 → grep 定位关键内容 → 必要时 read_file 看细节 → 最后给出归纳总结。
-
-2. 用户给你 URL 时：
-  用 fetch_url 抓取（多 URL 可以并行），再综合总结。
-
-3. 用户让你"做一个网页应用 / 待办应用 / 任意 web demo"时（必须实际调用工具，不要只描述）：
-
-  **重要的项目约定（不要自己重写 bootstrap）**：
-  - app/index.html 已经预置在模板里，固定用 import maps 引 React + Babel Standalone 实时编译 TSX
-  - app/index.html 固定加载 ./App.tsx 作为入口、固定引用 ./styles.css 作为样式
-  - 你**禁止**写入或修改 app/index.html（它已经能正确工作）
-
-  **你需要做的事**：
-  - 用 write_file 至少生成这三个文件：
-    1. app/styles.css — 应用样式
-    2. app/App.tsx — **必须**用 \`import { createRoot } from 'react-dom/client'\` 把组件渲染到 \`document.getElementById('root')\`
-    3. app/Button.tsx 或其他组件 .tsx — 可被 App.tsx import
-  - .tsx 之间用相对路径 import：\`import { Button } from './Button.tsx'\`（必须带 .tsx 后缀）
-  - React 用 \`import React, { useState } from 'react'\`，不要从其他源导入
-  - 文件全部写完后**立即**调用 start_preview 启动预览服务器（这一步绝对不能省）
-  - 最后用一段简短文本告诉用户：生成了哪些文件 + 预览地址
-
-回答简洁直接，独立的工具调用尽量并行执行。`;
-
-function ask() {
-  rl.question('\nYou: ', async (input) => {
-    const trimmed = input.trim();
-    if (!trimmed || trimmed === 'exit') {
-      console.log('Bye!');
-      rl.close();
+  if (githubToken && canSpawn) {
+    console.log('\n连接 GitHub MCP Server...');
+    try {
+      const client = new MCPClient(
+        'npx',
+        ['-y', '@modelcontextprotocol/server-github'],
+        {GITHUB_PERSONAL_ACCESS_TOKEN: githubToken},
+      );
+      const tools = await registry.registerMCPServer('github', client);
+      console.log(`  已注册 ${tools.length} 个 MCP 工具`);
       return;
+    } catch (err) {
+      console.log(
+        `  MCP 连接失败: ${err instanceof Error ? err.message : err}`,
+      );
+      console.log('  降级为 Mock MCP...');
     }
+  }
 
-    messages.push({role: 'user', content: trimmed});
+  if (!githubToken) {
+    console.log('\n未配置 GITHUB_PERSONAL_ACCESS_TOKEN，使用 Mock MCP');
+  }
 
-    await agentLoop(model, registry, messages, SYSTEM);
-
-    ask();
-  });
+  const mockClient = new MockMCPClient();
+  const tools = await registry.registerMCPServer('github', mockClient);
+  console.log(`  已注册 ${tools.length} 个 Mock MCP 工具`);
 }
 
-console.log('Super Agent v0.3 — Fuses (type "exit" to quit)\n');
-console.log('试试输入：“测试死循环”、“测试重试” 或随便聊几轮观察 Token 用量\n');
-ask();
+async function main() {
+  await connectMCP();
+
+  console.log(`\n已注册 ${registry.getAll().length} 个工具：`);
+  for (const tool of registry.getAll()) {
+    const isMCP = tool.name.startsWith('mcp__');
+    const flags = [
+      isMCP ? 'MCP' : '内置',
+      tool.isConcurrencySafe ? '可并发' : '串行',
+    ].join(', ');
+    console.log(`  - ${tool.name}（${flags}）`);
+  }
+
+  const messages: ModelMessage[] = [];
+  const rl = createInterface({input: process.stdin, output: process.stdout});
+
+  const SYSTEM = `你是 Super Agent，一个有工具调用能力的 AI 助手。
+你有内置工具和 MCP 工具可用。MCP 工具以 mcp__ 开头，如 mcp__github__list_issues。
+需要查询 GitHub 信息时，使用 mcp__github__ 前缀的工具。
+需要操作本地文件时，使用内置工具。
+回答要简洁直接。`;
+
+  function ask() {
+    rl.question('\nYou: ', async (input) => {
+      const trimmed = input.trim();
+      if (!trimmed || trimmed === 'exit') {
+        console.log('Bye!');
+        await registry.closeAllMCP();
+        rl.close();
+        return;
+      }
+
+      messages.push({role: 'user', content: trimmed});
+      await agentLoop(model, registry, messages, SYSTEM);
+      ask();
+    });
+  }
+
+  console.log('\nSuper Agent v0.5 — MCP (type "exit" to quit)');
+  console.log('试试："查看 vercel/ai 的 issues"、"搜索 MCP 相关的仓库"\n');
+  ask();
+}
+
+main().catch(console.error);

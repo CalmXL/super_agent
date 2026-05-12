@@ -1,4 +1,5 @@
-import { jsonSchema } from 'ai';
+import {jsonSchema} from 'ai';
+import {MCPClient, MockMCPClient} from './mcp-client';
 
 /**
  * 工具注册系统
@@ -162,6 +163,53 @@ export class ToolRegistry {
       };
     }
     return result;
+  }
+
+  private mcpClients: Array<MCPClient | MockMCPClient> = [];
+
+  async registerMCPServer(
+    serverName: string,
+    client: MCPClient | MockMCPClient,
+  ): Promise<string[]> {
+    await client.connect();
+    this.mcpClients.push(client);
+
+    const tools = await client.listTools();
+    const registered: string[] = [];
+
+    for (const tool of tools) {
+      // 命名空间隔离
+      const prefixedName = `mcp__${serverName}__${tool.name}`;
+      if (this.tools.has(prefixedName)) continue;
+
+      const toolClient = client;
+      const originalName = tool.name;
+
+      // 注册工具定义
+      this.register({
+        name: prefixedName,
+        description: `[MCP:${serverName}] ${tool.description}`,
+        parameters: tool.inputSchema as Record<string, unknown>,
+        isConcurrencySafe: true,
+        isReadOnly: true,
+        maxResultChars: 3000,
+        execute: async (input: any) => {
+          // 执行工具并返回结果文本
+          return await toolClient.callTool(originalName, input);
+        },
+      });
+
+      registered.push(prefixedName);
+    }
+
+    return registered;
+  }
+
+  async closeAllMCP(): Promise<void> {
+    for (const tool of this.mcpClients) {
+      await tool.close();
+    }
+    this.mcpClients = [];
   }
 }
 
