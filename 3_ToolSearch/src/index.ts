@@ -10,8 +10,6 @@ import {agentLoop} from './agent-loop.js';
 
 import {execSync} from 'node:child_process';
 
-// console.log(process.platform);
-
 function resolveNpx(): string {
   try {
     if (process.platform === 'win32') {
