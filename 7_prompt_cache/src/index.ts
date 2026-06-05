@@ -1,28 +1,22 @@
-import 'dotenv/config';
-import {type ModelMessage} from 'ai';
 import {createOpenAI} from '@ai-sdk/openai';
-import {createMockModel} from './mock-model.js';
+import {type ModelMessage} from 'ai';
+import 'dotenv/config';
 import {createInterface} from 'node:readline';
-import {ToolRegistry, type ToolDefinition} from './tools/registry.js';
-import {allTools} from './tools/index.js';
-import {MockMCPClient} from './tools/mcp-client.js';
 import {agentLoop} from './agent/loop.js';
-import {SessionStore} from './session/store.js';
+import {applyDefense, estimateMessageTokens} from './context/defense.js';
 import {
   PromptBuilder,
   coreRules,
-  toolGuide,
   deferredTools,
   sessionContext,
+  toolGuide,
   type PromptContext,
 } from './context/prompt-builder.js';
-import {
-  TokenTracker,
-  estimateMessageTokens,
-  truncateToolResults,
-  ttlPrune,
-  applyDefense,
-} from './context/defense.js';
+import {createMockModel} from './mock-model.js';
+import {SessionStore} from './session/store.js';
+import {allTools} from './tools/index.js';
+import {MockMCPClient} from './tools/mcp-client.js';
+import {ToolRegistry, type ToolDefinition} from './tools/registry.js';
 
 const cc = createOpenAI({
   baseURL: 'https://147ai.online/v1',
