@@ -1,0 +1,23 @@
+{
+  "name": "super-agent-11-memory",
+  "version": "0.11.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "continue": "tsx src/index.ts --continue"
+  },
+  "dependencies": {
+    "ai": "5.0.98",
+    "@ai-sdk/openai": "2.0.44",
+    "zod": "3.25.76",
+    "dotenv": "16.5.0",
+    "turndown": "^7.2.4"
+  },
+  "devDependencies": {
+    "tsx": "4.19.4",
+    "@types/node": "22.15.3",
+    "@types/turndown": "^5.0.6",
+    "typescript": "5.8.3",
+    "@modelcontextprotocol/server-github": "2025.4.8"
+  }
+}
