@@ -1,0 +1,4 @@
+{"ts":1780996208799,"model":"claude-sonnet-4-6","cost":0.000109,"inputTokens":14,"outputTokens":19,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780996214663,"model":"claude-sonnet-4-6","cost":0.000157,"inputTokens":22,"outputTokens":27,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780996245464,"model":"claude-sonnet-4-6","cost":0.000936,"inputTokens":86,"outputTokens":170,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780996248941,"model":"claude-sonnet-4-6","cost":0.000302,"inputTokens":142,"outputTokens":32,"cacheReadTokens":0,"cacheWriteTokens":0}
