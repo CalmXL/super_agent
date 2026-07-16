@@ -218,6 +218,7 @@ export class MemoryStore {
     const files = fs
       .readdirSync(this.memoryDir)
       .filter((f) => f.endsWith('.md') && f !== INDEX_FILE);
+    console.log("🚀 ~ MemoryStore ~ list ~ files:", files)
 
     for (const file of files) {
       const filePath = path.join(this.memoryDir, file);
@@ -228,6 +229,9 @@ export class MemoryStore {
         entries.push({...parsed, filePath});
       }
     }
+
+    
+    console.log("🚀 ~ MemoryStore ~ list ~ entries:", entries)
     return entries;
   }
 
@@ -361,6 +365,7 @@ export class MemoryStore {
   private parseFrontmatter(raw: string): Omit<MemoryEntry, 'filePath'> | null {
     // 第一段 `---` 和第二段 `---` 之间是元数据，后面是正文。
     const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    console.log("🚀 ~ MemoryStore ~ parseFrontmatter ~ match:", match)
     if (!match) return null;
 
     const meta: Record<string, string> = {};

@@ -2,3 +2,9 @@
 {"ts":1780996214663,"model":"claude-sonnet-4-6","cost":0.000157,"inputTokens":22,"outputTokens":27,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1780996245464,"model":"claude-sonnet-4-6","cost":0.000936,"inputTokens":86,"outputTokens":170,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1780996248941,"model":"claude-sonnet-4-6","cost":0.000302,"inputTokens":142,"outputTokens":32,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784123119307,"model":"mock-model","cost":0.00027,"inputTokens":155,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784123120566,"model":"mock-model","cost":0.000347,"inputTokens":232,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784123149814,"model":"mock-model","cost":0.000435,"inputTokens":320,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784123151066,"model":"mock-model","cost":0.000532,"inputTokens":417,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784124085871,"model":"mock-model","cost":0.000273,"inputTokens":158,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784124087133,"model":"mock-model","cost":0.000361,"inputTokens":246,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
