@@ -4,7 +4,7 @@ import {createOpenAI} from '@ai-sdk/openai';
 import {createMockModel} from './mock-model';
 import {createInterface} from 'node:readline';
 import {weatherTool, calculatorTool} from './tools';
-import {agentLoop} from './agent-loop';
+import {agentLoop, BudgetState} from './agent-loop';
 
 const cc = createOpenAI({
   baseURL: 'https://147ai.online/v1',
@@ -19,6 +19,8 @@ const model = process.env.TEST_KEY
 
 const tools = {get_weather: weatherTool, calculator: calculatorTool};
 const messages: ModelMessage[] = [];
+
+const budget: BudgetState = {used: 0, limit: 15000};
 const rl = createInterface({input: process.stdin, output: process.stdout});
 
 const SYSTEM = `你是 Super Agent，一个有工具调用能力的 AI 助手。
@@ -36,7 +38,7 @@ function ask() {
 
     messages.push({role: 'user', content: trimmed});
 
-    await agentLoop(model, tools, messages, SYSTEM);
+    await agentLoop(model, tools, messages, SYSTEM, budget);
 
     ask();
   });
