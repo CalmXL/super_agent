@@ -463,8 +463,14 @@ function makeToolCallChunks(intents: ToolCallIntent[], prompt: any[]): any[] {
   return chunks;
 }
 
+/**
+ * LLM Mock 大模型模拟对象
+ * 兼容测试 Vercel AI SDK
+ * @returns 
+ */
 export function createMockModel() {
   return {
+    // 基础元数据
     specificationVersion: 'v2' as const,
     provider: 'mock',
     modelId: 'mock-model',
@@ -473,6 +479,7 @@ export function createMockModel() {
       return Promise.resolve({});
     },
 
+    // 阻塞式生成
     async doGenerate({prompt}: any) {
       // Detect compression request (called via generateText with compress system prompt)
       const allText = (prompt || [])
@@ -553,6 +560,7 @@ export function createMockModel() {
       };
     },
 
+    // 流式生成
     async doStream({prompt}: any) {
       const text = extractUserText(prompt);
 
