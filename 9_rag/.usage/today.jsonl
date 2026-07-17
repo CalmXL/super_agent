@@ -2,3 +2,7 @@
 {"ts":1780996214663,"model":"claude-sonnet-4-6","cost":0.000157,"inputTokens":22,"outputTokens":27,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1780996245464,"model":"claude-sonnet-4-6","cost":0.000936,"inputTokens":86,"outputTokens":170,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1780996248941,"model":"claude-sonnet-4-6","cost":0.000302,"inputTokens":142,"outputTokens":32,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784206015861,"model":"mock-model","cost":0.00027,"inputTokens":155,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784206073582,"model":"mock-model","cost":0.000296,"inputTokens":181,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784206162826,"model":"mock-model","cost":0.000297,"inputTokens":182,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784206228111,"model":"mock-model","cost":0.000939,"inputTokens":824,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}

@@ -1,6 +1,6 @@
 import { cosineSimilarity } from './embedder.js';
-import type { StoredChunk } from './store';
-import type { VectorStore } from './store';
+import type { StoredChunk } from './store.js';
+import type { VectorStore } from './store.js';
 import type { EmbeddingFn } from './embedder.js';
 import { embed } from './embedder.js';
 
@@ -126,7 +126,7 @@ function normalizeViaSigmoid(scores: number[]): number[] {
 
 // ── MMR deduplication ──────────────────────
 
-function mmrSelect(results: SearchResult[], topK: number): SearchResult[] {
+export function mmrSelect(results: SearchResult[], topK: number): SearchResult[] {
   if (results.length <= topK) return results;
 
   const selected: SearchResult[] = [results[0]];
