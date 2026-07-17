@@ -1,0 +1,6 @@
+{"ts":1784273191604,"model":"claude-sonnet-4-6","cost":0.003001,"inputTokens":2841,"outputTokens":32,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784273237048,"model":"claude-sonnet-4-6","cost":0.0055506,"inputTokens":907,"outputTokens":873,"cacheReadTokens":2786,"cacheWriteTokens":0}
+{"ts":1784273242402,"model":"claude-sonnet-4-6","cost":0.0012948,"inputTokens":536,"outputTokens":79,"cacheReadTokens":3638,"cacheWriteTokens":0}
+{"ts":1784273267097,"model":"claude-sonnet-4-6","cost":0.0009759000000000001,"inputTokens":234,"outputTokens":66,"cacheReadTokens":4119,"cacheWriteTokens":0}
+{"ts":1784273271985,"model":"claude-sonnet-4-6","cost":0.0011708,"inputTokens":216,"outputTokens":105,"cacheReadTokens":4298,"cacheWriteTokens":0}
+{"ts":1784273282391,"model":"claude-sonnet-4-6","cost":0.00654,"inputTokens":4680,"outputTokens":372,"cacheReadTokens":0,"cacheWriteTokens":0}
