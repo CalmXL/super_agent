@@ -43,6 +43,8 @@ import {PluginManager} from './plugins/manager.js';
 import {PluginDefinition} from './plugins/type.js';
 import {supabasePlugin} from './plugins/supabase-plugin.js';
 import {createPluginCommands} from './commands/plugin.js';
+import {ChannelGateway} from './channels/gateway.js';
+import {FeishuChannel} from './channels/feishu.js';
 
 const cc = createOpenAI({
   baseURL: 'https://api.deepseek.com',
@@ -87,6 +89,31 @@ const availablePlugins = new Map<string, PluginDefinition>([
   ['supabase', supabasePlugin],
 ]);
 
+// ── Prompt Builder ────────────────────────────────
+const builder = new PromptBuilder()
+  .pipe('coreRules', coreRules())
+  .pipe('toolGuide', toolGuide())
+  .pipe('deferredTools', deferredTools())
+  .pipe('memoryContext', memoryContext(memoryStore))
+  .pipe('ragContext', ragContext(vectorStore))
+  .pipe('skillContext', () => skillLoader.buildPromptSection(activeSkills))
+  .pipe('sessionContext', sessionContext());
+
+// -- Channel Gateway ----------------------------------
+const gateway = new ChannelGateway({
+  model,
+  registry,
+  buildSystem: () => builder.build(makePromptCtx()),
+});
+
+const FEISHU_PORT = Number(process.env.FEISHU_PORT || '3000');
+const feishu_channel = new FeishuChannel({
+  appId: process.env.FEISHU_APP_ID || '',
+  appSecret: process.env.FEISHU_APP_SECRET || '',
+  port: FEISHU_PORT,
+});
+gateway.register(feishu_channel);
+
 // ── Commands ────────────────────────────────
 const dispatch = createDispatcher([
   ...debugCommands,
@@ -98,22 +125,36 @@ const dispatch = createDispatcher([
   ...createPluginCommands(pluginManager, availablePlugins),
 ]);
 
+function makePromptCtx(): PromptContext {
+  return {
+    toolCount: registry.getActiveTools().length,
+    deferredToolSummary: registry.getDeferredToolSummary(),
+    sessionMessageCount: 0,
+    sessionId: 'default',
+  };
+}
+
 async function main() {
   await connectMCP();
+
+  console.log('  加载插件...');
+  for (const [name, def] of availablePlugins) {
+    try {
+      const tools = await pluginManager.load(def);
+      console.log(` ✓ ${name} - ${tools.length}个工具`);
+    } catch {
+      console.log(` ❌ ${name} - 加载失败`);
+    }
+  }
+
+  // 启动 channel
+  console.log('  启动 Channel...');
+  await gateway.startAll();
 
   const store = new SessionStore('default');
   let messages: ModelMessage[] = [];
   const timestamps = new Map<number, number>();
   const tracker = new UsageTracker('.usage/today.jsonl');
-
-  const builder = new PromptBuilder()
-    .pipe('coreRules', coreRules())
-    .pipe('toolGuide', toolGuide())
-    .pipe('deferredTools', deferredTools())
-    .pipe('memoryContext', memoryContext(memoryStore))
-    .pipe('ragContext', ragContext(vectorStore))
-    .pipe('skillContext', () => skillLoader.buildPromptSection(activeSkills))
-    .pipe('sessionContext', sessionContext());
 
   const rl = createInterface({input: process.stdin, output: process.stdout});
 
@@ -132,6 +173,7 @@ async function main() {
       if (!trimmed || trimmed === 'exit') {
         console.log('Bye!');
         await pluginManager.unloadAll();
+        await gateway.stopAll();
         rl.close();
         return;
       }
@@ -174,16 +216,16 @@ async function main() {
       ask();
     });
   }
-
-  console.log('Super Agent v0.15 — Plugins (type "exit" to quit)');
+  console.log('Super Agent v0.16 — Channel (type "exit" to quit)');
   console.log('快捷命令：');
-  console.log('  /plugin          — 查看插件状态');
-  console.log('  /plugin load X   — 加载插件');
-  console.log('  /plugin unload X — 卸载插件');
+  console.log('  /channel         — 查看通道状态');
+  console.log('  /plugin          — 查看插件');
   console.log('  /skill           — 查看 skills');
   console.log('  /memory          — 查看记忆');
   console.log('  /context         — context 占用矩阵');
-  console.log('  status           — 当前状态');
+  console.log('');
+  console.log(`  Dashboard: http://localhost:${FEISHU_PORT}`);
+  console.log('  打开浏览器发送测试消息，或在终端直接对话');
   console.log('');
 
   if (loadedSkills.length > 0) {
@@ -191,16 +233,6 @@ async function main() {
     for (const s of loadedSkills)
       console.log(`    /${s.name} — ${s.description}`);
     console.log('');
-  }
-
-  console.log('  加载插件...');
-  for (const [name, def] of availablePlugins) {
-    try {
-      const tools = await pluginManager.load(def);
-      console.log(` ✓ ${name} - ${tools.length}个工具`);
-    } catch {
-      console.log(` ❌ ${name} - 加载失败`);
-    }
   }
 
   if (fs.existsSync('docs')) {
