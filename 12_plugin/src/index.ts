@@ -39,6 +39,10 @@ import {ragCommands} from './commands/rag.js';
 import {dreamCommands} from './commands/dream.js';
 import {SkillLoader} from './skills/loader.js';
 import {createSkillCommands} from './commands/skill.js';
+import {PluginManager} from './plugins/manager.js';
+import {PluginDefinition} from './plugins/type.js';
+import {supabasePlugin} from './plugins/supabase-plugin.js';
+import {createPluginCommands} from './commands/plugin.js';
 
 const cc = createOpenAI({
   baseURL: 'https://api.deepseek.com',
@@ -77,6 +81,12 @@ const skillLoader = new SkillLoader('.');
 const loadedSkills = skillLoader.load();
 const activeSkills = new Set<string>();
 
+// -- Plugins --------------------------------
+const pluginManager = new PluginManager(registry);
+const availablePlugins = new Map<string, PluginDefinition>([
+  ['supabase', supabasePlugin],
+]);
+
 // ── Commands ────────────────────────────────
 const dispatch = createDispatcher([
   ...debugCommands,
@@ -85,6 +95,7 @@ const dispatch = createDispatcher([
   ...ragCommands,
   ...dreamCommands,
   ...createSkillCommands(skillLoader, activeSkills),
+  ...createPluginCommands(pluginManager, availablePlugins),
 ]);
 
 async function main() {
@@ -120,6 +131,7 @@ async function main() {
       const trimmed = input.trim();
       if (!trimmed || trimmed === 'exit') {
         console.log('Bye!');
+        await pluginManager.unloadAll();
         rl.close();
         return;
       }
@@ -163,16 +175,15 @@ async function main() {
     });
   }
 
-  console.log('Super Agent v0.14 — Skills (type "exit" to quit)');
+  console.log('Super Agent v0.15 — Plugins (type "exit" to quit)');
   console.log('快捷命令：');
-  console.log('  /skill          — 查看可用的 skills');
-  console.log('  /skill load X   — 激活一个 skill');
-  console.log('  /code-review    — 直接激活并执行 code-review skill');
-  console.log('  /memory         — 查看记忆');
-  console.log('  /lint           — 扫描记忆库');
-  console.log('  /dream          — 记忆整理');
-  console.log('  /context        — context 占用矩阵');
-  console.log('  status          — 当前状态');
+  console.log('  /plugin          — 查看插件状态');
+  console.log('  /plugin load X   — 加载插件');
+  console.log('  /plugin unload X — 卸载插件');
+  console.log('  /skill           — 查看 skills');
+  console.log('  /memory          — 查看记忆');
+  console.log('  /context         — context 占用矩阵');
+  console.log('  status           — 当前状态');
   console.log('');
 
   if (loadedSkills.length > 0) {
@@ -180,6 +191,16 @@ async function main() {
     for (const s of loadedSkills)
       console.log(`    /${s.name} — ${s.description}`);
     console.log('');
+  }
+
+  console.log('  加载插件...');
+  for (const [name, def] of availablePlugins) {
+    try {
+      const tools = await pluginManager.load(def);
+      console.log(` ✓ ${name} - ${tools.length}个工具`);
+    } catch {
+      console.log(` ❌ ${name} - 加载失败`);
+    }
   }
 
   if (fs.existsSync('docs')) {

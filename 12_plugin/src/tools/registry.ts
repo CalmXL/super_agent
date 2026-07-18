@@ -1,5 +1,5 @@
-import { jsonSchema } from 'ai';
-import type { MCPClient, MockMCPClient } from './mcp-client.js';
+import {jsonSchema} from 'ai';
+import type {MCPClient, MockMCPClient} from './mcp-client.js';
 
 export interface ToolDefinition {
   name: string;
@@ -31,6 +31,11 @@ export class ToolRegistry {
     for (const tool of tools) {
       this.tools.set(tool.name, tool);
     }
+  }
+
+  unregister(name: string): boolean {
+    this.discoveredTools.delete(name);
+    return this.tools.delete(name);
   }
 
   async registerMCPServer(
@@ -99,7 +104,7 @@ export class ToolRegistry {
   }
 
   getActiveTools(): ToolDefinition[] {
-    return this.getAll().filter(tool => {
+    return this.getAll().filter((tool) => {
       if (tool.profile && !tool.profile.includes(this.activeProfile)) {
         return false;
       }
@@ -111,13 +116,13 @@ export class ToolRegistry {
   }
 
   getDeferredToolSummary(): string {
-    const deferred = this.getAll().filter(tool => {
+    const deferred = this.getAll().filter((tool) => {
       return tool.shouldDefer && !this.discoveredTools.has(tool.name);
     });
 
     if (deferred.length === 0) return '';
 
-    const lines = deferred.map(t => {
+    const lines = deferred.map((t) => {
       const hint = t.searchHint ? ` — ${t.searchHint}` : '';
       return `  - ${t.name}${hint}`;
     });
@@ -131,7 +136,10 @@ export class ToolRegistry {
 
     // 支持逗号分隔的多个工具名，如 "mcp__github__list_issues,mcp__github__search_repositories"
     const names = q.includes(',')
-      ? q.split(',').map(n => n.trim()).filter(Boolean)
+      ? q
+          .split(',')
+          .map((n) => n.trim())
+          .filter(Boolean)
       : [q];
 
     for (const name of names) {
@@ -145,7 +153,7 @@ export class ToolRegistry {
     return results;
   }
 
-  countTokenEstimate(): { active: number; deferred: number; total: number } {
+  countTokenEstimate(): {active: number; deferred: number; total: number} {
     let active = 0;
     let deferred = 0;
 
@@ -166,12 +174,12 @@ export class ToolRegistry {
       }
     }
 
-    return { active, deferred, total: active + deferred };
+    return {active, deferred, total: active + deferred};
   }
 
   private async acquireConcurrent(): Promise<void> {
     while (this.exclusiveLock) {
-      await new Promise<void>(r => this.waitQueue.push(r));
+      await new Promise<void>((r) => this.waitQueue.push(r));
     }
     this.concurrentCount++;
   }
@@ -183,7 +191,7 @@ export class ToolRegistry {
 
   private async acquireExclusive(): Promise<void> {
     while (this.exclusiveLock || this.concurrentCount > 0) {
-      await new Promise<void>(r => this.waitQueue.push(r));
+      await new Promise<void>((r) => this.waitQueue.push(r));
     }
     this.exclusiveLock = true;
   }
@@ -219,7 +227,8 @@ export class ToolRegistry {
           }
           try {
             const raw = await executeFn(input);
-            const text = typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
+            const text =
+              typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
             return truncateResult(text, maxChars);
           } finally {
             if (isSafe) {
@@ -235,7 +244,10 @@ export class ToolRegistry {
   }
 }
 
-export function truncateResult(text: string, maxChars: number = DEFAULT_MAX_RESULT_CHARS): string {
+export function truncateResult(
+  text: string,
+  maxChars: number = DEFAULT_MAX_RESULT_CHARS,
+): string {
   if (text.length <= maxChars) return text;
 
   const headSize = Math.floor(maxChars * 0.6);
