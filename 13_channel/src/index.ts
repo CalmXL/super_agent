@@ -46,6 +46,7 @@ import {createPluginCommands} from './commands/plugin.js';
 import {ChannelGateway} from './channels/gateway.js';
 import {FeishuChannel} from './channels/feishu.js';
 
+// 创建 openAI 实例
 const cc = createOpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.AI_KEY,

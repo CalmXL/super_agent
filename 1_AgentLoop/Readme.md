@@ -122,3 +122,19 @@ for await (const part of result.fullStream) {
   }
 }
 ```
+
+### result.response
+
+```js
+const result = streamText({
+  model,
+  system,
+  tools,
+  messages,
+});
+
+const stepMessages = await result.response;
+messages.push(...stepMessages.messages);
+```
+
+result.response 返回的是一个 Promise, resolove 之后包含这一步的完整信息，其中 messages 是一个数组，包含模型在这一步里产生的所有消息。

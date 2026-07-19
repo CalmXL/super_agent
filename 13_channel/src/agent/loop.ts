@@ -81,7 +81,7 @@ export async function agentLoop(
             }
           }
         }
-
+        
         stepResponse = await result.response;
         stepUsage = await result.usage;
         break;

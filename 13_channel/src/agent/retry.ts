@@ -1,5 +1,14 @@
 // --- 错误分类 ---
 
+/**
+ * 
+ * @param error 
+ * @returns 
+ * 
+ * 429 Too Many Request 请求频率超过速率限制
+ * 529 Overloaded 服务资源不足，模型过载
+ * 408 请求重试
+ */
 export function isRetryable(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
 
@@ -24,8 +33,11 @@ export function isRetryable(error: unknown): boolean {
 // --- 指数退避 + 随机抖动 ---
 
 export function calculateDelay(attempt: number, baseMs = 500, maxMs = 30000): number {
+  // 指数增长
   const exponential = baseMs * Math.pow(2, attempt - 1);
   const capped = Math.min(exponential, maxMs);
+
+  // 抖动
   const jitterRange = capped * 0.25;
   const jittered = capped + (Math.random() * 2 - 1) * jitterRange;
   return Math.max(0, Math.round(jittered));

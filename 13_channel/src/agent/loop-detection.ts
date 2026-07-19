@@ -73,6 +73,7 @@ export function resetHistory(): void {
 
 // --- 检测器 ---
 
+// 无进展轮询检测器
 function getNoProgressStreak(toolName: string, argsHash: string): number {
   let streak = 0;
   let lastResultHash: string | undefined;
@@ -92,6 +93,7 @@ function getNoProgressStreak(toolName: string, argsHash: string): number {
   return streak;
 }
 
+// pingPong 检测
 function getPingPongCount(currentHash: string): number {
   if (history.length < 3) return 0;
 
