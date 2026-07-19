@@ -117,7 +117,7 @@ export async function agentLoop(
       typeof stepUsage?.inputTokens === 'number'
         ? stepUsage.inputTokens
         : (stepUsage?.inputTokens?.total ?? 0);
-    const out =
+    const out =9
       typeof stepUsage?.outputTokens === 'number'
         ? stepUsage.outputTokens
         : (stepUsage?.outputTokens?.total ?? 0);
