@@ -1,17 +1,17 @@
 import 'dotenv/config';
 import fs from 'node:fs';
-import {type ModelMessage} from 'ai';
-import {createOpenAI} from '@ai-sdk/openai';
-import {createMockModel} from './mock-model.js';
-import {createInterface} from 'node:readline';
-import {ToolRegistry} from './tools/registry.js';
-import {allTools} from './tools/index.js';
-import {createToolSearchTool} from './tools/tool-search.js';
-import {createMemoryTool} from './tools/memory-tools.js';
-import {createRagTools} from './tools/rag-tools.js';
-import {MockMCPClient} from './tools/mcp-client.js';
-import {agentLoop} from './agent/loop.js';
-import {SessionStore} from './session/store.js';
+import { type ModelMessage } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createMockModel } from './mock-model.js';
+import { createInterface } from 'node:readline';
+import { ToolRegistry } from './tools/registry.js';
+import { allTools } from './tools/index.js';
+import { createToolSearchTool } from './tools/tool-search.js';
+import { createMemoryTool } from './tools/memory-tools.js';
+import { createRagTools } from './tools/rag-tools.js';
+import { MockMCPClient } from './tools/mcp-client.js';
+import { agentLoop } from './agent/loop.js';
+import { SessionStore } from './session/store.js';
 import {
   PromptBuilder,
   coreRules,
@@ -20,31 +20,31 @@ import {
   sessionContext,
   type PromptContext,
 } from './context/prompt-builder.js';
-import {estimateMessageTokens} from './context/defense.js';
-import {UsageTracker} from './usage/tracker.js';
-import {MemoryStore} from './memory/store.js';
-import {memoryContext, ragContext} from './context/prompt-pipes.js';
-import {chunkDocument} from './rag/chunker.js';
+import { estimateMessageTokens } from './context/defense.js';
+import { UsageTracker } from './usage/tracker.js';
+import { MemoryStore } from './memory/store.js';
+import { memoryContext, ragContext } from './context/prompt-pipes.js';
+import { chunkDocument } from './rag/chunker.js';
 import {
   createMockEmbedder,
   createDashScopeEmbedder,
   embed,
 } from './rag/embedder.js';
-import {VectorStore} from './rag/store.js';
-import {createDispatcher, type CommandContext} from './commands/index.js';
-import {debugCommands} from './commands/debug.js';
-import {contextCommands} from './commands/context.js';
-import {memoryCommands} from './commands/memory.js';
-import {ragCommands} from './commands/rag.js';
-import {dreamCommands} from './commands/dream.js';
-import {SkillLoader} from './skills/loader.js';
-import {createSkillCommands} from './commands/skill.js';
-import {PluginManager} from './plugins/manager.js';
-import {PluginDefinition} from './plugins/type.js';
-import {supabasePlugin} from './plugins/supabase-plugin.js';
-import {createPluginCommands} from './commands/plugin.js';
-import {ChannelGateway} from './channels/gateway.js';
-import {FeishuChannel} from './channels/feishu.js';
+import { VectorStore } from './rag/store.js';
+import { createDispatcher, type CommandContext } from './commands/index.js';
+import { debugCommands } from './commands/debug.js';
+import { contextCommands } from './commands/context.js';
+import { memoryCommands } from './commands/memory.js';
+import { ragCommands } from './commands/rag.js';
+import { dreamCommands } from './commands/dream.js';
+import { SkillLoader } from './skills/loader.js';
+import { createSkillCommands } from './commands/skill.js';
+import { PluginManager } from './plugins/manager.js';
+import { PluginDefinition } from './plugins/type.js';
+import { supabasePlugin } from './plugins/supabase-plugin.js';
+import { createPluginCommands } from './commands/plugin.js';
+import { ChannelGateway } from './channels/gateway.js';
+import { FeishuChannel } from './channels/feishu.js';
 
 // 创建 openAI 实例
 const cc = createOpenAI({
@@ -68,8 +68,8 @@ registry.register(createMemoryTool(memoryStore));
 
 // ── RAG ────────────────────────────────
 const vectorStore = new VectorStore();
-const embedFn = process.env.DASHSCOPE_API_KEY
-  ? createDashScopeEmbedder(process.env.DASHSCOPE_API_KEY)
+const embedFn = process.env.KEY
+  ? createDashScopeEmbedder(process.env.KEY)
   : createMockEmbedder();
 registry.register(...createRagTools(vectorStore, embedFn));
 
@@ -157,7 +157,7 @@ async function main() {
   const timestamps = new Map<number, number>();
   const tracker = new UsageTracker('.usage/today.jsonl');
 
-  const rl = createInterface({input: process.stdin, output: process.stdout});
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   function makePromptCtx(): PromptContext {
     return {
@@ -199,7 +199,7 @@ async function main() {
         return;
       }
 
-      const userMsg: ModelMessage = {role: 'user', content: trimmed};
+      const userMsg: ModelMessage = { role: 'user', content: trimmed };
       messages.push(userMsg);
       timestamps.set(messages.length - 1, Date.now());
       store.append(userMsg);
@@ -249,7 +249,7 @@ async function main() {
           chunks.map((c) => c.text),
         );
         vectorStore.addBatch(
-          chunks.map((c, i) => ({chunk: c, embedding: embeddings[i]})),
+          chunks.map((c, i) => ({ chunk: c, embedding: embeddings[i] })),
         );
         console.log(`    ${f} → ${chunks.length} 个片段`);
       }

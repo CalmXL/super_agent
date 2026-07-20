@@ -62,7 +62,9 @@ export const editFileTool: ToolDefinition = {
     const content = readFileSync(resolved, 'utf-8');
     const count = content.split(old_string).length - 1;
     if (count === 0) return `未找到匹配内容。请检查 old_string 是否与文件中的文本完全一致`;
+
     if (count > 1) return `找到 ${count} 处匹配，请提供更多上下文让 old_string 唯一`;
+
     writeFileSync(resolved, content.replace(old_string, new_string), 'utf-8');
     return `已替换 ${path} 中的内容（${old_string.length} → ${new_string.length} 字符）`;
   },

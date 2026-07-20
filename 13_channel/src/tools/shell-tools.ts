@@ -19,6 +19,7 @@ export const bashTool: ToolDefinition = {
     } catch {
       return `[bash 不可用] 当前环境不支持 shell 命令。本地终端运行 pnpm start 可使用 bash 工具。`;
     }
+
     try {
       const output = execSync(command, {
         encoding: 'utf-8',
