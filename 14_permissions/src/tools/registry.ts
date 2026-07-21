@@ -1,7 +1,8 @@
 import {jsonSchema} from 'ai';
 import type {MCPClient, MockMCPClient} from './mcp-client.js';
-import {canUseTool, Role} from "../security/roles.js";
+import {canUseTool, Role} from "../security/role.js";
 import {HookPipeline} from "../security/hooks.js";
+import {classifyBashCommand} from "../security/bash-classifier.js";
 
 export interface ToolDefinition {
   name: string;
@@ -30,6 +31,7 @@ export class ToolRegistry {
   private discoveredTools = new Set<string>();
   private currentRole: Role = 'owner';
   private hookPipeline?: HookPipeline;
+
 
   register(...tools: ToolDefinition[]): void {
     for (const tool of tools) {
@@ -99,16 +101,16 @@ export class ToolRegistry {
     this.currentRole = role;
   }
 
-  getRole() {
+  getRole(): Role {
     return this.currentRole;
-  }
-
-  markDiscovered(name: string): void {
-    this.discoveredTools.add(name);
   }
 
   setHookPipeline(pipeline: HookPipeline): void {
     this.hookPipeline = pipeline;
+  }
+
+  markDiscovered(name: string): void {
+    this.discoveredTools.add(name);
   }
 
   get(name: string): ToolDefinition | undefined {
@@ -124,7 +126,6 @@ export class ToolRegistry {
       if (tool.profile && !tool.profile.includes(this.activeProfile)) {
         return false;
       }
-
       if (tool.shouldDefer && !this.discoveredTools.has(tool.name)) {
         return false;
       }
@@ -132,7 +133,6 @@ export class ToolRegistry {
       if (!canUseTool(this.currentRole, tool.name)) {
         return false;
       }
-
       return true;
     });
   }
@@ -239,7 +239,7 @@ export class ToolRegistry {
       const registry = this;
 
       const hookPipeline = registry.hookPipeline;
-      const toolName= tool.name;
+      const toolName = tool.name;
 
       result[tool.name] = {
         description: tool.description,
@@ -274,6 +274,7 @@ export class ToolRegistry {
           } else {
             await registry.acquireExclusive();
           }
+
           try {
             const raw = await executeFn(input);
             const text =

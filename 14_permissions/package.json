@@ -1,6 +1,6 @@
 {
-  "name": "super-agent-16-channel",
-  "version": "0.16.0",
+  "name": "super-agent-17-permissions",
+  "version": "0.17.0",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
